@@ -27,6 +27,7 @@ assertK = "0.28.1"
 turbine = "1.2.1"
 core-ktx = "1.7.0"
 biometry = "1.4.0-alpha02"
+buildKonfig = "0.17.1"
 
 
 [libraries]
@@ -102,6 +103,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
 
 [bundles]
 ktor = [

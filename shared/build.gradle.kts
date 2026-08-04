@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -8,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -20,28 +22,28 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     android {
-       namespace = "com.ahmad.raza.coinroutine.shared"
-       compileSdk = libs.versions.android.compileSdk.get().toInt()
-       minSdk = libs.versions.android.minSdk.get().toInt()
-    
-       compilerOptions {
-           jvmTarget = JvmTarget.JVM_11
-       }
-       androidResources {
-           enable = true
-       }
-       withHostTest {
-           isIncludeAndroidResources = true
-       }
-       withDeviceTestBuilder {
-           sourceSetTreeName = "test"
-       }.configure {
-           instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-       }
+        namespace = "com.ahmad.raza.coinroutine.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
+        androidResources {
+            enable = true
+        }
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
+        withDeviceTestBuilder {
+            sourceSetTreeName = "test"
+        }.configure {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -94,6 +96,23 @@ kotlin {
     }
 }
 
+val apiKey = project.loadLocalProperty(
+    "local.properties",
+    "API_KEY"
+)
+
+buildkonfig {
+    packageName = "com.ahmad.raza.coinroutine.shared"
+
+    defaultConfigs {
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "API_KEY",
+            apiKey
+        )
+    }
+}
+
 room {
     schemaDirectory("$projectDir/schemas")
 }
@@ -105,4 +124,24 @@ dependencies {
         add("kspIosSimulatorArm64", libs.room.compiler)
         androidRuntimeClasspath(libs.compose.uiTooling)
     }
+}
+
+fun Project.loadLocalProperty(
+    path: String,
+    propertyName: String,
+): String {
+    val file = rootProject.file(path)
+
+    require(file.exists()) {
+        "File '$path' does not exist."
+    }
+
+    val properties = Properties().apply {
+        load(file.inputStream())
+    }
+
+    return properties.getProperty(propertyName)
+        ?: throw GradleException(
+            "Property '$propertyName' not found in '$path'."
+        )
 }
