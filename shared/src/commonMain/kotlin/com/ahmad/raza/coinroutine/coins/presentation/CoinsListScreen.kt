@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.ahmad.raza.coinroutine.coins.presentation.components.PerformanceChart
 import com.ahmad.raza.coinroutine.theme.LocalCoinRoutineColorsPalette
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -42,22 +46,32 @@ fun CoinsListScreen(
     val state = coinsListViewModel.state.collectAsStateWithLifecycle()
 
     CoinsListContent(
-        state = state.value,
-        onCoinClicked = onCoinClicked
+        state = state.value, onCoinClicked = onCoinClicked,
+        onDismiss = { coinsListViewModel.onDismissChart() },
+        onCoinLongPressed = { coinId -> coinsListViewModel.onCoinLongPressed(coinId) }
     )
 
 }
 
 @Composable
 fun CoinsListContent(
-    state: CoinState, onCoinClicked: (String) -> Unit
+    state: CoinState,
+    onDismiss: () -> Unit,
+    onCoinClicked: (String) -> Unit,
+    onCoinLongPressed: (String) -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
+        if (state.chartState != null) {
+            CoinChartDialog(
+                chartState = state.chartState, onDismiss = onDismiss
+            )
+        }
         CoinsList(
             coins = state.coins,
-            onCoinClicked = onCoinClicked
+            onCoinClicked = onCoinClicked,
+            onCoinLongPressed = onCoinLongPressed
         )
     }
 
@@ -67,11 +81,11 @@ fun CoinsListContent(
 fun CoinsList(
     coins: List<UiCoinListItem>,
     onCoinClicked: (String) -> Unit,
+    onCoinLongPressed: (String) -> Unit
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
+        modifier = Modifier.background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -89,7 +103,7 @@ fun CoinsList(
             items(coins) { coin ->
                 CoinListItem(
                     coin = coin,
-                    onCoinLongPressed = {},
+                    onCoinLongPressed = onCoinLongPressed,
                     onCoinClicked = onCoinClicked
                 )
             }
@@ -102,16 +116,14 @@ fun CoinsList(
 private fun CoinListItem(
     coin: UiCoinListItem,
     onCoinLongPressed: (String) -> Unit,
-    onCoinClicked: (String) -> Unit,
+    onCoinClicked: (String) -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
             .combinedClickable(
                 onLongClick = { onCoinLongPressed(coin.id) },
-                onClick = { onCoinClicked(coin.id) }
-            )
+                onClick = { onCoinClicked(coin.id) })
             .padding(16.dp)
     ) {
         AsyncImage(
@@ -153,4 +165,48 @@ private fun CoinListItem(
             )
         }
     }
+}
+
+@Composable
+fun CoinChartDialog(
+    chartState: CoinChartState, onDismiss: () -> Unit
+) {
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth(),
+        title = {
+            Text(
+                text = "24h Price chart for ${chartState.coinName}"
+            )
+        },
+        confirmButton = {},
+        dismissButton = {
+            Button(
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = "Close"
+                )
+            }
+        },
+        text = {
+            if (chartState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                }
+            } else {
+                PerformanceChart(
+                    modifier = Modifier.fillMaxWidth().height(200.dp).padding(16.dp),
+                    nodes = chartState.sparkLine,
+                    profitColor = LocalCoinRoutineColorsPalette.current.profitGreen,
+                    lossColor = LocalCoinRoutineColorsPalette.current.lossRed
+                )
+            }
+
+        },
+    )
+
 }
