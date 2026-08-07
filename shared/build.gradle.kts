@@ -118,12 +118,10 @@ room {
 }
 
 dependencies {
-    dependencies {
-        add("kspAndroid", libs.room.compiler)
-        add("kspIosArm64", libs.room.compiler)
-        add("kspIosSimulatorArm64", libs.room.compiler)
-        androidRuntimeClasspath(libs.compose.uiTooling)
-    }
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+    androidRuntimeClasspath(libs.compose.uiTooling)
 }
 
 fun Project.loadLocalProperty(
