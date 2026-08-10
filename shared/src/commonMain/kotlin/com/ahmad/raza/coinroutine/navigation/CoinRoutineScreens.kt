@@ -3,6 +3,8 @@ package com.ahmad.raza.coinroutine.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
+object Biometric
+@Serializable
 object Coins
 @Serializable
 object Portfolio
