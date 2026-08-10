@@ -10,15 +10,19 @@ import com.ahmad.raza.coinroutine.core.utils.formatPercentage
 import com.ahmad.raza.coinroutine.core.utils.toUiText
 import com.ahmad.raza.coinroutine.portfolio.domain.PortfolioCoinModel
 import com.ahmad.raza.coinroutine.portfolio.domain.PortfolioRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 
 class PortfolioViewModel(
-    private val portfolioRepository: PortfolioRepository
+    private val portfolioRepository: PortfolioRepository,
+    private val coroutinesDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PortfolioState(isLoading = true))
@@ -47,7 +51,8 @@ class PortfolioViewModel(
         }
     }.onStart {
         portfolioRepository.initializeBalance()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), PortfolioState(isLoading = true))
+    }.flowOn(coroutinesDispatcher)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), PortfolioState(isLoading = true))
 
     private fun handleSuccessState(
         currentState: PortfolioState,
